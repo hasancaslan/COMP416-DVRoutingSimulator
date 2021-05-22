@@ -23,6 +23,7 @@ public class Node {
         this.cost = DVSimulator.cost[this.id];
         this.neighbors = DVSimulator.neighbors[this.id];
         this.myDV = this.cost;
+        System.out.println(Arrays.toString(this.cost));
 
         for (int i = 0; i < DVSimulator.NUMNODES; i++) {
             // reading from the DVSimulator variables,
@@ -49,6 +50,7 @@ public class Node {
         notifyNeighbors();
     }
 
+    // Taken from https://stackoverflow.com/a/34541755
     public static boolean contains(final int[] arr, final int key) {
         return Arrays.stream(arr).anyMatch(i -> i == key);
     }
