@@ -1,7 +1,7 @@
+import java.util.Arrays;
 import java.util.Random;
 
-public class Node
-{
+public class Node {
     private static int count = 0;
 
     // Each node will store a costs vector, its own distance vector
@@ -20,7 +20,11 @@ public class Node
 
     public Node() {
         this.id = count++;
-        for (int i = 0; i<DVSimulator.NUMNODES; i++) {
+        this.cost = DVSimulator.cost[this.id];
+        this.neighbors = DVSimulator.neighbors[this.id];
+        this.myDV = this.cost;
+
+        for (int i = 0; i < DVSimulator.NUMNODES; i++) {
             // reading from the DVSimulator variables,
             // for each node:
             // 1. initialize its cost and myDV value
@@ -32,34 +36,43 @@ public class Node
             // Else if node is a direct neighbor, use the neighbor id
             // Otherwise, choose a random neighbor (see randomNeighbor method)
 
-            // WRITE YOUR CODE HERE
+            if (i == this.id) {
+                this.bestPath[i] = this.id;
+            } else if (Node.contains(neighbors, i)) {
+                this.bestPath[i] = i;
+            } else {
+                this.bestPath[i] = randomNeighbor();
+            }
         }
 
         // send initial DV to neighbors
         notifyNeighbors();
     }
 
+    public static boolean contains(final int[] arr, final int key) {
+        return Arrays.stream(arr).anyMatch(i -> i == key);
+    }
+
     public int getId() {
         return id;
     }
 
-
     public void printDV() {
-        System.out.print("i            " );
-        for (int i = 0; i<DVSimulator.NUMNODES; i++) {
+        System.out.print("i            ");
+        for (int i = 0; i < DVSimulator.NUMNODES; i++) {
             System.out.print(i + "      ");
         }
         System.out.println();
-        System.out.print("cost         " );
-        for (int i = 0; i<DVSimulator.NUMNODES; i++) {
+        System.out.print("cost         ");
+        for (int i = 0; i < DVSimulator.NUMNODES; i++) {
             System.out.print(myDV[i] + "      ");
         }
         System.out.println();
     }
 
     public void printFwdTable() {
-        System.out.println("dest         next Node" );
-        for (int i = 0; i<DVSimulator.NUMNODES; i++) {
+        System.out.println("dest         next Node");
+        for (int i = 0; i < DVSimulator.NUMNODES; i++) {
             System.out.println(i + "            " + fwdTable[i]);
         }
     }
@@ -75,7 +88,10 @@ public class Node
         // and current node's DV as the dv
         // then send packet using helper method sendPacket in DVSimulator
 
-        // WRITE YOUR CODE HERE
+        for (int neighbor : neighbors) {
+            Packet packet = new Packet(this.id, neighbor, this.myDV);
+            DVSimulator.sendPacket(packet);
+        }
     }
 
     public void updateDV(Packet p) {
@@ -91,14 +107,28 @@ public class Node
         // 1. Notify neighbors about the new myDV using notifyNeighbors() method
         // 2. Increment the convergence measure numUpdates variable once
 
-        // WRITE YOUR CODE HERE
+        boolean hasDVChanged = false;
+
+        for (int i = 0; i < myDV.length; i++) {
+            int new_cost = cost[neighbor_id] + neighborDV[neighbor_id][i];
+            int current_cost = myDV[i];
+
+            if (new_cost < current_cost) {
+                myDV[i] = new_cost;
+                bestPath[i] = neighbor_id;
+                hasDVChanged = true;
+            }
+        }
+
+        if (hasDVChanged) {
+            notifyNeighbors();
+            numUpdates++;
+        }
     }
 
     public void buildFwdTable() {
         // just copy the final values of bestPath vector
-        for (int i = 0; i < DVSimulator.NUMNODES; i++) {
-            fwdTable[i] = bestPath[i];
-        }
+        System.arraycopy(bestPath, 0, fwdTable, 0, DVSimulator.NUMNODES);
     }
 
     public int getNumUpdates() {
